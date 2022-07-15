@@ -23,10 +23,10 @@ string fname("ROM.BIN");
 
 bool verbose = false;
 
-bool r = false;
+bool r = true;
 
-unsigned long cycles = 1;
-uint32_t speed = 100000;
+uint64_t cycles = 1;
+uint32_t speed = 1;
 
 void MemWrite(uint16_t addr, uint8_t byte)
 {	
@@ -85,15 +85,18 @@ int main() {
   mos6502 cpu(MemRead, MemWrite);
 
   cpu.Reset();
-  // m6522_reset();
+  //m6522_reset();
   m6522_init(&state);
+
+  int irqcount = 0;
   
   while(true){
   //for(int i=0;i<16;i++){
     if(pins & M6522_IRQ){
-      //if(verbose){
-        cout << "                    ---IRQ---" << endl;
-      //}
+ //    if(verbose){
+        cout << irqcount << "                                        ---IRQ---" << endl;
+ //     }
+      irqcount++;
       cpu.IRQ();
     }
     cpu.Run(speed, cycles);
