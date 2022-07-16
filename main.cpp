@@ -26,7 +26,7 @@ bool verbose = false;
 bool r = true;
 
 uint64_t cycles = 1;
-const uint32_t speed = 100;
+uint32_t speed = 100;
 
 void MemWrite(uint16_t addr, uint8_t byte)
 {	
@@ -91,14 +91,16 @@ int main() {
   int irqcount = 0;
 
   while(true){
-  //for(int i=0;i<16;i++){
+  //for(int i=0;i<9999;i++){
     if(pins & M6522_IRQ){
-      cout << irqcount << "                                        ---IRQ---" << (pins & M6522_IRQ) << endl;
+      cout << irqcount << " IRQ " << endl;
       irqcount++;
       cpu.IRQ();
+      pins &= ~M6522_IRQ;
     }
     cpu.Run(speed, cycles);
     pins = m6522_tick(&state, pins);
     pins |= ((uint64_t)0) << 41; // cs2 always low
   }
 }
+
