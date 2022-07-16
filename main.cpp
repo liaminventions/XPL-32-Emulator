@@ -26,18 +26,23 @@ bool verbose = false;
 bool r = true;
 
 uint64_t cycles = 1;
-uint32_t speed = 100;
+uint32_t speed = 1;
 
 void MemWrite(uint16_t addr, uint8_t byte)
 {	
   *pinn |= ((uint64_t)0) << 24; // rw
-  if(verbose){
-     cout<<"wr   ";
-  cout << std::hex << addr << "      ";
+  //if(verbose){
+     cout<<"w ";
+  cout << std::hex << addr << "  ";
   cout << std::hex << std::setw(2) << std::setfill('0') << (int)byte << endl; 
-  }
+  //}
   if(addr < 0xC000){
     memory[addr] = byte;
+  }
+  if(addr >= 0x8000 && addr <= 0x87FF) {
+    if(addr == 0x8000){
+    cout << (char)byte;
+    }
   }
   
   if(addr >= 0xB000 && addr <= 0xB7FF){
@@ -52,10 +57,11 @@ void MemWrite(uint16_t addr, uint8_t byte)
 
 uint8_t MemRead(uint16_t addr)
 {
-  *pinn |= ((uint64_t)1) << 24; // rw
+  
+	*pinn |= ((uint64_t)1) << 24; // rw
   if(verbose){
-    cout << "rd   ";
-  cout << std::hex << addr << "      ";
+  cout << "r";
+  cout << std::hex << addr;
   cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr] << endl;
   }
   
@@ -85,22 +91,26 @@ int main() {
   mos6502 cpu(MemRead, MemWrite);
 
   cpu.Reset();
-  //m6522_reset();
+  m6522_reset(&state);
   m6522_init(&state);
 
   int irqcount = 0;
+  uint64_t irqstate;
+  uint64_t lastirq = 0;
 
   while(true){
-  //for(int i=0;i<9999;i++){
-    if(pins & M6522_IRQ){
-      cout << irqcount << " IRQ " << endl;
-      irqcount++;
-      cpu.IRQ();
-      pins &= ~M6522_IRQ;
-    }
     cpu.Run(speed, cycles);
     pins = m6522_tick(&state, pins);
     pins |= ((uint64_t)0) << 41; // cs2 always low
+    irqstate = pins & M6522_IRQ;
+    if(irqstate != lastirq) {
+	    if(irqstate && _m6522_read(&state, M6522_REG_IER) > 0) {
+	    	cout << irqcount << " IRQ " << endl;
+		irqcount++;
+		cpu.IRQ();
+	    }
+    }
+    lastirq = irqstate;
   }
 }
 
