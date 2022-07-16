@@ -34,8 +34,8 @@ void MemWrite(uint16_t addr, uint8_t byte)
 {	
   *pinn |= ((uint64_t)0) << 24; // rw
   if(verbose){
-    cout<<"w ";
-    cout << std::hex << addr << "  ";
+    cout<<"w   ";
+    cout << std::hex << addr << "    ";
     cout << std::hex << std::setw(2) << std::setfill('0') << (int)byte << endl; 
   }
   if(addr < 0xC000){
@@ -62,8 +62,8 @@ uint8_t MemRead(uint16_t addr)
   
 	*pinn |= ((uint64_t)1) << 24; // rw
 if(verbose){
-  cout << "r";
-  cout << std::hex << addr;
+  cout << "r   ";
+  cout << std::hex << addr << "    ";
   cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr] << endl;
   }
   
