@@ -28,26 +28,28 @@ bool r = true;
 uint64_t cycles = 1;
 uint32_t speed = 1;
 
+uint8_t viaAddr;
+
 void MemWrite(uint16_t addr, uint8_t byte)
 {	
   *pinn |= ((uint64_t)0) << 24; // rw
-  //if(verbose){
-     cout<<"w ";
-  cout << std::hex << addr << "  ";
-  cout << std::hex << std::setw(2) << std::setfill('0') << (int)byte << endl; 
-  //}
+  if(verbose){
+    cout<<"w ";
+    cout << std::hex << addr << "  ";
+    cout << std::hex << std::setw(2) << std::setfill('0') << (int)byte << endl; 
+  }
   if(addr < 0xC000){
     memory[addr] = byte;
   }
-  if(addr >= 0x8000 && addr <= 0x87FF) {
+  //if(addr >= 0x8000 && addr <= 0x87FF) {
     if(addr == 0x8000){
-    cout << (char)byte;
+      cout << byte;
     }
-  }
+  //}
   
   if(addr >= 0xB000 && addr <= 0xB7FF){
     pins |= ((uint64_t)1) << 40; // cs1 
-    uint8_t viaAddr = addr - 0xB000;
+    viaAddr = addr - 0xB000;
     _m6522_write(&state, viaAddr, byte);
   } else {
     pins |= ((uint64_t)0) << 40; // cs1 
@@ -59,16 +61,18 @@ uint8_t MemRead(uint16_t addr)
 {
   
 	*pinn |= ((uint64_t)1) << 24; // rw
-  if(verbose){
+if(verbose){
   cout << "r";
   cout << std::hex << addr;
   cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr] << endl;
   }
   
   if(addr >= 0xB000 && addr <= 0xB7FF){
-    
+    pins |= ((uint64_t)1) << 40; // cs1
+    viaAddr = addr - 0xB000;
+    memory[addr] = _m6522_read(&state, viaAddr);
   } else {
-    
+    pins |= ((uint64_t)0) << 40; // cs1
   }
 	return memory[addr];
 }
@@ -103,7 +107,7 @@ int main() {
     pins = m6522_tick(&state, pins);
     pins |= ((uint64_t)0) << 41; // cs2 always low
     irqstate = pins & M6522_IRQ;
-    if(irqstate != lastirq) {
+    if(irqstate != lastirq && !_m6522_read(&state, M6522_REG_IER) == 0) {
 	    if(irqstate && _m6522_read(&state, M6522_REG_IER) > 0) {
 	    	cout << irqcount << " IRQ " << endl;
 		irqcount++;
