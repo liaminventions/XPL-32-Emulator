@@ -118,6 +118,11 @@ mos6502::mos6502(BusRead r, BusWrite w)
 	instr.cycles = 2;
 	InstrTable[0xF0] = instr;
 
+	instr.addr = &mos6502::Addr_REL;
+	instr.code = &mos6502::Op_BRA;
+	instr.cycles = 2;
+	InstrTable[0x80] = instr;
+
 	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_BIT;
 	instr.cycles = 4;
@@ -667,22 +672,22 @@ mos6502::mos6502(BusRead r, BusWrite w)
 	InstrTable[0x94] = instr;
 
   
-  instr.addr = &mos6502::Addr_ABS;
+  	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_STZ;
 	instr.cycles = 4;
 	InstrTable[0x9C] = instr;
 
-  instr.addr = &mos6502::Addr_ABX;
+  	instr.addr = &mos6502::Addr_ABX;
 	instr.code = &mos6502::Op_STZ;
 	instr.cycles = 4;
 	InstrTable[0x9E] = instr;
 
-  instr.addr = &mos6502::Addr_ZER;
+  	instr.addr = &mos6502::Addr_ZER;
 	instr.code = &mos6502::Op_STZ;
 	instr.cycles = 3;
 	InstrTable[0x64] = instr;
 
-  instr.addr = &mos6502::Addr_ZEX;
+  	instr.addr = &mos6502::Addr_ZEX;
 	instr.code = &mos6502::Op_STZ;
 	instr.cycles = 4;
 	InstrTable[0x74] = instr;
@@ -1120,6 +1125,12 @@ void mos6502::Op_BEQ(uint16_t src)
 	{
 		pc = src;
 	}
+	return;
+}
+
+void mos6502::Op_BRA(uint16_t src)
+{
+	pc = src;
 	return;
 }
 

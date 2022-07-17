@@ -44,7 +44,7 @@ void MemWrite(uint16_t addr, uint8_t byte)
   }
   if(addr >= 0x8000 && addr <= 0x87FF) {
   //  if(addr == 0x8000){
-      cout << char(byte);
+      cout << byte; // char(byte)
     }
   //}
   

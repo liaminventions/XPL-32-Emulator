@@ -102,6 +102,7 @@ private:
 	void Op_BCS(uint16_t src);
 
 	void Op_BEQ(uint16_t src);
+	void Op_BRA(uint16_t src);
 	void Op_BIT(uint16_t src);
 	void Op_BMI(uint16_t src);
 	void Op_BNE(uint16_t src);
