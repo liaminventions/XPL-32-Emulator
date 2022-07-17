@@ -38,12 +38,13 @@ void MemWrite(uint16_t addr, uint8_t byte)
     cout << std::hex << addr << "    ";
     cout << std::hex << std::setw(2) << std::setfill('0') << (int)byte << endl; 
   }
+  //cout << "w" << endl;
   if(addr < 0xC000){
     memory[addr] = byte;
   }
-  //if(addr >= 0x8000 && addr <= 0x87FF) {
-    if(addr == 0x8000){
-      cout << byte;
+  if(addr >= 0x8000 && addr <= 0x87FF) {
+  //  if(addr == 0x8000){
+      cout << char(byte);
     }
   //}
   
@@ -66,7 +67,7 @@ if(verbose){
   cout << std::hex << addr << "    ";
   cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr] << endl;
   }
-  
+  // cout << std::hex << addr;
   if(addr >= 0xB000 && addr <= 0xB7FF){
     pins |= ((uint64_t)1) << 40; // cs1
     viaAddr = addr - 0xB000;
@@ -83,7 +84,7 @@ int main() {
   }
 
   ifstream inputData;
-	inputData.open("ROM.BIN");
+	inputData.open(fname);
 	if (inputData) {
 		inputData.read(reinterpret_cast<char *>(memory + sizeof(uint8_t) * 32768), sizeof(uint8_t) * 32768);
 		inputData.close();
