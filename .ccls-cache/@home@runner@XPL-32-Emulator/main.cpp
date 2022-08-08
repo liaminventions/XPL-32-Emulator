@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string>
 #include <unistd.h>
+//#include "ncurses.h"
 
 using namespace std;
 
@@ -22,7 +23,10 @@ Plus4::ACIA6551 acia;
 
 m6522_t state;
 uint64_t pins;
-
+//int irqcount = 0;
+uint64_t viairqstate = 0;
+uint8_t aciairqstate = 0;
+uint64_t lastirq = 0;
 uint64_t *pinn = &pins;
 
 string fname("ROM.BIN");
@@ -76,11 +80,17 @@ uint8_t MemRead(uint16_t addr) {
     cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr]
          << endl;
   }
+  //if(irqcount > 240) {
+  //  cout << "r   ";
+  //  cout << std::hex << addr << "    ";
+  //  cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr]
+  //       << endl;
+  //}
   // cout << std::hex << addr;
   if (addr >= 0x8000 && addr <= 0x87FF) {
     memory[addr] = acia.readRegister(addr - 0x8000);
     if (addr == 0x8000) {
-      memory[addr] = cin.get();
+      memory[addr] = getchar();
     }
   }
 
@@ -119,11 +129,6 @@ int main() {
   m6522_init(&state);
   m6522_reset(&state);
 
-  // int irqcount = 0;
-  uint64_t viairqstate = 0;
-  uint8_t aciairqstate = 0;
-  uint64_t lastirq = 0;
-
   while (true) {
     cpu.Run(speed, cycles);          // w65c02
     acia.runOneCycle();              // r65c51
@@ -132,8 +137,8 @@ int main() {
     aciairqstate = acia.getInterruptFlag();
     pins |= ((uint64_t)1) << 41; // cs2 always low
     if (viairqstate != lastirq && memory[0xB00E] != 0) {
-      // cout << irqcount << " IRQ " << viairqstate << endl;
-      // irqcount++;
+      //cout << irqcount << " IRQ " << viairqstate << endl;
+      //irqcount++;
       cpu.IRQ();
       lastirq = viairqstate;
     }
