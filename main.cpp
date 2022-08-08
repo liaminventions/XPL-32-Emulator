@@ -21,7 +21,7 @@ uint64_t* pinn = &pins;
 
 string fname("ROM.BIN");
 
-bool verbose = false;
+bool verbose = true;
 
 bool r = true;
 
@@ -62,11 +62,11 @@ uint8_t MemRead(uint16_t addr)
 {
   
 	*pinn |= ((uint64_t)1) << 24; // rw
-  if(verbose){
-    cout << "r   ";
-    cout << std::hex << addr << "    ";
-    cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr] << endl;
-  }
+  //if(verbose){
+  //  cout << "r   ";
+  //  cout << std::hex << addr << "    ";
+  //  cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr] << endl;
+  //}
   // cout << std::hex << addr;
   if(addr >= 0xB000 && addr <= 0xB7FF){
     pins |= ((uint64_t)1) << 40; // cs1
