@@ -4,6 +4,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <string>
+#include <unistd.h>
 
 using namespace std;
 
@@ -11,7 +12,7 @@ using namespace std;
 
 #define CHIPS_IMPL
 
-uint8_t memory[65536]; // 64K ram (not)
+uint8_t memory[65536]; // 64K range
 
 #include "6522.h"
 
@@ -49,6 +50,7 @@ void MemWrite(uint16_t addr, uint8_t byte) {
   }
   if (addr >= 0x8000 && addr <= 0x87FF) {
     acia.writeRegister(addr - 0x8000, byte);
+    memory[addr] = byte;
     if (addr == 0x8000) {
       cout << char(byte);
     }
@@ -56,6 +58,7 @@ void MemWrite(uint16_t addr, uint8_t byte) {
 
   if (addr >= 0xB000 && addr <= 0xB7FF) {
     pins |= ((uint64_t)1) << 40; // cs1
+    memory[addr] = byte;
     viaAddr = addr - 0xB000;
     _m6522_write(&state, viaAddr, byte);
   } else {
@@ -67,16 +70,16 @@ void MemWrite(uint16_t addr, uint8_t byte) {
 uint8_t MemRead(uint16_t addr) {
 
   *pinn |= ((uint64_t)1) << 24; // rw
-  if(verbose){
+  if (verbose) {
     cout << "r   ";
     cout << std::hex << addr << "    ";
     cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr]
-    << endl;
+         << endl;
   }
   // cout << std::hex << addr;
   if (addr >= 0x8000 && addr <= 0x87FF) {
     memory[addr] = acia.readRegister(addr - 0x8000);
-    if(addr == 0x8000) {
+    if (addr == 0x8000) {
       memory[addr] = cin.get();
     }
   }
@@ -116,23 +119,23 @@ int main() {
   m6522_init(&state);
   m6522_reset(&state);
 
-  //int irqcount = 0;
-  uint64_t irqstate = 0;
+  // int irqcount = 0;
+  uint64_t viairqstate = 0;
+  uint8_t aciairqstate = 0;
   uint64_t lastirq = 0;
 
   while (true) {
     cpu.Run(speed, cycles);          // w65c02
     acia.runOneCycle();              // r65c51
     pins = m6522_tick(&state, pins); // w65c22
-    irqstate = pins & M6522_IRQ;
+    viairqstate = pins & M6522_IRQ;
+    aciairqstate = acia.getInterruptFlag();
     pins |= ((uint64_t)1) << 41; // cs2 always low
-    if (irqstate != lastirq && memory[0xB00E] != 0) {
-      if (irqstate != lastirq && _m6522_read(&state, M6522_REG_IER) != 0) {
-        //cout << irqcount << " IRQ " << endl;
-        //irqcount++;
-        cpu.IRQ();
-      }
+    if (viairqstate != lastirq && memory[0xB00E] != 0) {
+      // cout << irqcount << " IRQ " << viairqstate << endl;
+      // irqcount++;
+      cpu.IRQ();
+      lastirq = viairqstate;
     }
-    lastirq = irqstate;
   }
 }
