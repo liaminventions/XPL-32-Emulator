@@ -6,3 +6,9 @@ Requires g++ to build. The command:
 ```
   g++ main.cpp mos6502.cpp -o xpl
 ```
+
+then
+
+```
+  ./xpl
+```
