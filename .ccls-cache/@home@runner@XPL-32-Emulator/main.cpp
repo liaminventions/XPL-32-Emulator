@@ -21,28 +21,36 @@ uint64_t* pinn = &pins;
 
 string fname("ROM.BIN");
 
-bool verbose = false;
+bool verbose = true;
 
-bool r = false;
+bool r = true;
 
-unsigned long cycles = 1;
-uint32_t speed = 100000;
+uint64_t cycles = 1;
+uint32_t speed = 1;
+
+uint8_t viaAddr;
 
 void MemWrite(uint16_t addr, uint8_t byte)
 {	
   *pinn |= ((uint64_t)0) << 24; // rw
   if(verbose){
-     cout<<"wr   ";
-  cout << std::hex << addr << "      ";
-  cout << std::hex << std::setw(2) << std::setfill('0') << (int)byte << endl; 
+    cout<<"w   ";
+    cout << std::hex << addr << "    ";
+    cout << std::hex << std::setw(2) << std::setfill('0') << (int)byte << endl; 
   }
+  //cout << "w" << endl;
   if(addr < 0xC000){
     memory[addr] = byte;
   }
+  if(addr >= 0x8000 && addr <= 0x87FF) {
+  //  if(addr == 0x8000){
+      cout << char(byte); // char(byte)
+    }
+  //}
   
   if(addr >= 0xB000 && addr <= 0xB7FF){
     pins |= ((uint64_t)1) << 40; // cs1 
-    uint8_t viaAddr = addr - 0xB000;
+    viaAddr = addr - 0xB000;
     _m6522_write(&state, viaAddr, byte);
   } else {
     pins |= ((uint64_t)0) << 40; // cs1 
@@ -52,17 +60,20 @@ void MemWrite(uint16_t addr, uint8_t byte)
 
 uint8_t MemRead(uint16_t addr)
 {
-  *pinn |= ((uint64_t)1) << 24; // rw
-  if(verbose){
-    cout << "rd   ";
-  cout << std::hex << addr << "      ";
-  cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr] << endl;
-  }
   
+	*pinn |= ((uint64_t)1) << 24; // rw
+  //if(verbose){
+  //cout << "r   ";
+  //cout << std::hex << addr << "    ";
+  //cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr] << endl;
+  //}
+  // cout << std::hex << addr;
   if(addr >= 0xB000 && addr <= 0xB7FF){
-    
+    pins |= ((uint64_t)1) << 40; // cs1
+    viaAddr = addr - 0xB000;
+    memory[addr] = _m6522_read(&state, viaAddr);
   } else {
-    
+    pins |= ((uint64_t)0) << 40; // cs1
   }
 	return memory[addr];
 }
@@ -73,7 +84,7 @@ int main() {
   }
 
   ifstream inputData;
-	inputData.open("ROM.BIN");
+	inputData.open(fname);
 	if (inputData) {
 		inputData.read(reinterpret_cast<char *>(memory + sizeof(uint8_t) * 32768), sizeof(uint8_t) * 32768);
 		inputData.close();
@@ -81,23 +92,32 @@ int main() {
     cout << "Error Loading ROM!" << endl;
     exit(0);
   }
+
+  pins |= ((uint64_t)1) << 41; // cs2 always low
   
   mos6502 cpu(MemRead, MemWrite);
 
   cpu.Reset();
-  // m6522_reset();
+  m6522_reset(&state);
   m6522_init(&state);
-  
+
+  int irqcount = 0;
+  uint64_t irqstate = 0;
+  uint64_t lastirq = 0;
+
   while(true){
-  //for(int i=0;i<16;i++){
-    if(pins & M6522_IRQ){
-      //if(verbose){
-        cout << "                    ---IRQ---" << endl;
-      //}
-      cpu.IRQ();
-    }
     cpu.Run(speed, cycles);
     pins = m6522_tick(&state, pins);
-    pins |= ((uint64_t)0) << 41; // cs2 always low
+    irqstate = pins & M6522_IRQ;
+    pins |= ((uint64_t)1) << 41; // cs2 always low
+    if(irqstate != lastirq && _m6522_read(&state, M6522_REG_IER) != 0) {
+	    if(irqstate && _m6522_read(&state, M6522_REG_IER) > 0) {
+	    	cout << irqcount << " IRQ " << endl;
+	      irqcount++;
+		    cpu.IRQ();
+	    }
+    }
+    lastirq = irqstate;
   }
 }
+
