@@ -25,8 +25,8 @@ bool verbose = true;
 
 bool r = true;
 
-uint64_t cycles = 1;
-uint32_t speed = 10000;
+uint64_t cycles;
+uint32_t speed = 1;
 
 uint8_t viaAddr;
 
