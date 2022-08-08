@@ -14,6 +14,10 @@ uint8_t memory[65536]; // 64K ram (not)
 
 #include "6522.h"
 
+#include "6551.hpp"
+
+Plus4::ACIA6551 acia;
+
 m6522_t state;
 uint64_t pins;
 
@@ -29,6 +33,7 @@ uint64_t cycles;
 uint32_t speed = 1;
 
 uint8_t viaAddr;
+uint8_t aciaAddr;
 
 void MemWrite(uint16_t addr, uint8_t byte)
 {	
@@ -43,10 +48,11 @@ void MemWrite(uint16_t addr, uint8_t byte)
     memory[addr] = byte;
   }
   if(addr >= 0x8000 && addr <= 0x87FF) {
-  //  if(addr == 0x8000){
-      cout << char(byte); // char(byte)
+    acia.writeRegister(addr-0x8000, byte);
+    if(addr == 0x8000) {
+      cout << char(byte) << endl;
     }
-  //}
+  }
   
   if(addr >= 0xB000 && addr <= 0xB7FF){
     pins |= ((uint64_t)1) << 40; // cs1 
@@ -68,6 +74,10 @@ uint8_t MemRead(uint16_t addr)
   //  cout << std::hex << std::setw(2) << std::setfill('0') << (int)memory[addr] << endl;
   //}
   // cout << std::hex << addr;
+  if(addr >= 0x8000 && addr <= 0x87FF) {
+    memory[addr] = acia.readRegister(addr-0x8000);
+  }
+  
   if(addr >= 0xB000 && addr <= 0xB7FF){
     pins |= ((uint64_t)1) << 40; // cs1
     viaAddr = addr - 0xB000;
@@ -76,6 +86,12 @@ uint8_t MemRead(uint16_t addr)
     pins |= ((uint64_t)0) << 40; // cs1
   }
 	return memory[addr];
+}
+
+void half(){
+  while(true) {
+    
+  }
 }
 
 int main() {
@@ -98,16 +114,18 @@ int main() {
   mos6502 cpu(MemRead, MemWrite);
 
   cpu.Reset();
-  //m6522_reset(&state);
+  acia.reset();
   m6522_init(&state);
+  m6522_reset(&state);
 
   int irqcount = 0;
   uint64_t irqstate = 0;
   uint64_t lastirq = 0;
 
   while(true){
-    cpu.Run(speed, cycles);
-    pins = m6522_tick(&state, pins);
+    cpu.Run(speed, cycles);            // w65c02
+    acia.runOneCycle();                // r65c51
+    pins = m6522_tick(&state, pins);   // w65c22
     irqstate = pins & M6522_IRQ;
     pins |= ((uint64_t)1) << 41; // cs2 always low
     if(irqstate != lastirq && memory[0xB00E] != 0) {
