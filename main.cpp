@@ -31,12 +31,12 @@ uint64_t *pinn = &pins;
 
 string fname("osi_bas.bin");
 
-bool verbose = false;
+bool verbose = true;
 
 bool r = true;
 
 uint64_t cycles;
-uint32_t speed = 1;
+uint32_t speed = 100000000;
 
 uint8_t viaAddr;
 uint8_t aciaAddr;
@@ -57,7 +57,7 @@ void MemWrite(uint16_t addr, uint8_t byte) {
     memory[addr] = byte;
     if (addr == 0x8000) {
       cout << char(byte);
-    }
+    } 
   }
 
   if (addr >= 0xB000 && addr <= 0xB7FF) {
@@ -92,6 +92,9 @@ uint8_t MemRead(uint16_t addr) {
     if (addr == 0x8000) {
       memory[addr] = getchar();
     }
+    if (addr == 0x8001) {
+      memory[addr] = 0x18;
+    }
   }
 
   if (addr >= 0xB000 && addr <= 0xB7FF) {
@@ -112,8 +115,8 @@ int main() {
   ifstream inputData;
   inputData.open(fname);
   if (inputData) {
-    inputData.read(reinterpret_cast<char *>(memory + sizeof(uint8_t) * 32768),
-                   sizeof(uint8_t) * 32768);
+    inputData.read(reinterpret_cast<char *>(memory + sizeof(uint8_t) * 49152),
+                   sizeof(uint8_t) * 49152);
     inputData.close();
   } else {
     cout << "Error Loading ROM!" << endl;
