@@ -29,7 +29,7 @@ uint8_t aciairqstate = 0;
 uint64_t lastirq = 0;
 uint64_t *pinn = &pins;
 
-string fname("ROM.BIN");
+string fname("osi_bas.bin");
 
 bool verbose = false;
 
