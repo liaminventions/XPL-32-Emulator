@@ -29,9 +29,9 @@ uint8_t aciairqstate = 0;
 uint64_t lastirq = 0;
 uint64_t *pinn = &pins;
 
-string fname("osi_bas.bin");
+string fname("ROM.BIN");
 
-bool verbose = true;
+bool verbose = false;
 
 bool r = true;
 
@@ -115,8 +115,8 @@ int main() {
   ifstream inputData;
   inputData.open(fname);
   if (inputData) {
-    inputData.read(reinterpret_cast<char *>(memory + sizeof(uint8_t) * 49152),
-                   sizeof(uint8_t) * 49152);
+    inputData.read(reinterpret_cast<char *>(memory + sizeof(uint8_t) * 32768),
+                   sizeof(uint8_t) * 32768);
     inputData.close();
   } else {
     cout << "Error Loading ROM!" << endl;
