@@ -27,7 +27,7 @@ uint64_t pins;
 uint64_t viairqstate = 0;
 uint8_t aciairqstate = 0;
 uint64_t lastirq = 0;
-uint64_t *pinn = &pins;
+//uint64_t *pinn = &pins;
 
 string fname("ROM.BIN");
 
@@ -36,13 +36,13 @@ bool verbose = false;
 bool r = true;
 
 uint64_t cycles;
-uint32_t speed = 100000000;
+uint32_t speed = 1;//100000000;
 
 uint8_t viaAddr;
 uint8_t aciaAddr;
 
 void MemWrite(uint16_t addr, uint8_t byte) {
-  *pinn |= ((uint64_t)0) << 24; // rw
+  pins |= ((uint64_t)0) << 24; // rw
   if (verbose) {
     cout << "w   ";
     cout << std::hex << addr << "    ";
@@ -56,7 +56,7 @@ void MemWrite(uint16_t addr, uint8_t byte) {
     acia.writeRegister(addr - 0x8000, byte);
     memory[addr] = byte;
     if (addr == 0x8000) {
-      cout << char(byte);
+      cout << uint8_t(byte);
     } 
   }
 
@@ -73,7 +73,7 @@ void MemWrite(uint16_t addr, uint8_t byte) {
 
 uint8_t MemRead(uint16_t addr) {
 
-  *pinn |= ((uint64_t)1) << 24; // rw
+  pins |= ((uint64_t)1) << 24; // rw
   if (verbose) {
     cout << "r   ";
     cout << std::hex << addr << "    ";
