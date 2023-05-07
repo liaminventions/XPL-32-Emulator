@@ -1,5 +1,5 @@
 # XPL-32-Emulator
-A C++ emulator for the XPL-32.
+A C++ emulator for the XPL-32. (WARNING VERY BROKEN/UNFINISHED!)
 
 Requires g++ to build. The command:
 
